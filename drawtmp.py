@@ -7,6 +7,8 @@ from itertools import permutations
 from PySide import QtCore, QtGui
 from PySide.QtCore import QPointF, QRectF, QLineF
 from PySide.QtGui import QTransform, QColor, QVector2D
+import json
+import atexit
 has_midi = False
 try:
     import pypm
@@ -122,6 +124,8 @@ class Example(QtGui.QWidget):
         self.epx = 0.5
         self.ppx = 0.6
         self.ppy = 0.0
+
+        self.loadFile()
         super(Example, self).__init__()
         if has_midi:
             self.midi = pypm.Input(0)
@@ -129,6 +133,44 @@ class Example(QtGui.QWidget):
             self.timer.timeout.connect(self.timerEvent)
             self.timer.start(100)
         self.initUI()
+
+    def loadFile(self):
+        try:
+            json_data=open('json_data.txt')
+            variables = json.load(json_data)
+            json_data.close()
+
+            self.mrotation = variables['mrotation']
+            self.mtranslate.setX(variables['mtranslatex'])
+            self.mtranslate.setY(variables['mtranslatey'])
+            self.mscale.setX(variables['mscalex'])
+            self.mscale.setY(variables['mscaley'])
+            self.dof = variables['dof']
+            self.epx = variables['epx']
+            self.ppx = variables['ppx']
+            self.ppy = variables['ppy']
+
+        except:
+            print "Could not load file"
+    
+    def saveFile(self):
+        data = {}
+        data['mrotation'] = self.mrotation
+        data['mtranslatex'] = self.mtranslate.x()
+        data['mtranslatey'] = self.mtranslate.y()
+        data['mscalex'] = self.mscale.x()
+        data['mscaley'] = self.mscale.y()
+        data['dof'] = self.dof
+        data['epx'] = self.epx
+        data['ppx'] = self.ppx
+        data['ppy'] = self.ppy
+          
+        try:
+            json_data=open('json_data.txt', 'w')
+            json_data.write(json.dumps(data))
+            json_data.close()
+        except:
+            print "Could not save file"
         
     def initUI(self):      
 
@@ -237,7 +279,8 @@ def main():
     print "Got devinfo"
     ex = Example()
 
-    sys.exit(app.exec_())
+    atexit.register(ex.saveFile)
+    atexit.register(app.exec_)
 
 
 if __name__ == '__main__':
