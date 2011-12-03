@@ -61,6 +61,7 @@ class float4(floatn):
 def find_points(ppoi, eye):
     retpt = float4(0.0,0.0,0.0,0.0)
     scale = -1.0*ppoi['y']/eye['y'];
+    scaleinner = 0.0
     retpt['x'] = ppoi['x']+(eye['x']*scale); #if at first cube plane
     print retpt['x']
     if (0.0 < retpt['x'] and retpt['x'] < 1.0):
@@ -69,18 +70,44 @@ def find_points(ppoi, eye):
         if(eye['x']>0.0):#Eye goes down
             retpt['y'] = 0.0#float('nan');
         else:#Eye goes up
-            retpt['y'] =  eye['y']*scale;
+            retpt['y'] =  ((1.0-retpt['x'])*eye['y'])/eye['x']
+            print "EyeY:", retpt['y'] 
             retpt['x'] = 1.0
-        return float4(0.0,0.0,0.0,0.0)
+            if retpt['y'] > 1.0:
+                retpt['y'] = 0.0 # NAN
+                return float4(0.0,0.0,0.0,0.0)
     elif (retpt['x'] < 0.0):#over
-#        if(eye['x']<0.0):#Eye goes up
-#            retpt['y'] = eye['y']*scalar; 
-#        else:#Eye goes up
-#            retpt['y'] = NAN;
-        return float4(0.0,0.0,0.0,0.0);
-    scaleinner = 1.0/eye['y'];
+        if(eye['x']<0.0):#Eye goes up
+            retpt['y'] = 0.0#float('nan');
+        else:#Eye goes up
+            retpt['y'] =  ((-1.0*retpt['x'])*eye['y'])/eye['x']
+            print "EyeY:", retpt['y'] 
+            retpt['x'] = 0.0
+            if retpt['y'] > 1.0:
+                retpt['y'] = 0.0 # NAN
+                return float4(0.0,0.0,0.0,0.0)
+    scaleinner = (1.0-retpt['y'])/eye['y'];
     retpt['z'] = retpt['x'] + eye['x'] * scaleinner;#antar at dybden på kuben alltid er 1
     retpt['w'] = retpt['y'] + eye['y'] * scaleinner;
+    if (0.0 < retpt['z'] and retpt['z'] < 1.0):
+        retpt['w'] = 1.0; # (DEFINED) 
+    elif (retpt['z'] > 1.0):#below
+        if(eye['x']>0.0):#Eye goes down
+            retpt['w'] = 0.0#float('nan');
+        else:#Eye goes up
+            retpt['w'] =  ((1.0-retpt['z'])*eye['y'])/eye['x']
+            print "EyeY:", retpt['w'] 
+            retpt['z'] = 1.0
+    elif (retpt['z'] < 0.0):#over
+        if(eye['x']<0.0):#Eye goes up
+            retpt['w'] = 0.0#float('nan');
+        else:#Eye goes up
+            retpt['w'] =  ((-1.0*retpt['z'])*eye['y'])/eye['x']
+            print "EyeY:", retpt['w'] 
+            retpt['z'] = 0.0
+    if retpt['w'] > 1.0:
+        retpt['w'] = 0.0 # NAN
+        return float4(0.0,0.0,0.0,0.0)
     return retpt;
 
 
